@@ -13,7 +13,7 @@ Prerequisites:
 $ mkdir urlshortener
 $ cd urlshortener
 $ mkdir -p src/main/java
-$ subl src/main/java//Application.java
+$ subl src/main/java/urlshortener/Application.java
 ```
 Create the class ```Application``` with a ```main``` method that says hello world.
 ```
