@@ -1,33 +1,25 @@
 buildscript {
-  repositories {
-	mavenCentral()
-	maven { url 'http://repo.spring.io/release' }
-  }
-  dependencies {
-    classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.2.6.RELEASE'
-  }
+    repositories {
+        mavenCentral()
+        maven { url "http://repo.spring.io/release" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.0.RELEASE")
+    }
 }
+apply plugin: "spring-boot"
 
-eclipse {
-   project {
-      name = 'tutorials.urlshortener'
-   }
+repositories {
+    mavenCentral()
+    maven { url "http://repo.spring.io/release" }
 }
-
-apply plugin: 'eclipse-wtp'
-apply plugin: 'spring-boot'
-
-mainClassName = 'urlshortener.Application'
 
 dependencies {
-    compile 'org.springframework.boot:spring-boot-starter-web'
-	compile 'org.springframework.boot:spring-boot-starter-redis'
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "org.springframework.boot:spring-boot-starter-redis"
+    compile "commons-validator:commons-validator:1.5.1"
+    compile "com.google.guava:guava:19.0"
 
-    compile 'commons-validator:commons-validator:1.4.0'
-	compile 'com.google.guava:guava:17.0'
-
-    // Testing framework
-    testCompile 'org.springframework.boot:spring-boot-starter-test'
-    testCompile 'org.apache.httpcomponents:httpclient'
-    testCompile 'com.jayway.jsonpath:json-path'
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+    testCompile "org.apache.httpcomponents:httpclient:4.5.2"
 }
