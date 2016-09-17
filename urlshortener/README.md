@@ -54,7 +54,7 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.0.RELEASE")
     }
 }
-apply plugin: 'spring-boot'
+apply plugin: "spring-boot"
 
 repositories {
     mavenCentral()
@@ -148,8 +148,8 @@ Location: http:/www.unizar.es/
 Edit the class ```Application``` and rewrite the code as follows:
 ```Java
 package urlshortener;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.*;
@@ -266,16 +266,16 @@ Transfer-Encoding: chunked
 
 ```
 ## URL Shortener secured (version 2)
-Add the following dependencies to ```build.gradle```:
+Add the following dependencies to ```build.gradle``` after ```compile "org.springframework.boot:spring-boot-starter-web"```:
 ```Groovy
-compile 'commons-validator:commons-validator:1.4.0'
-compile 'com.google.guava:guava:17.0'    
+compile "commons-validator:commons-validator:1.5.1"
+compile "com.google.guava:guava:19.0"    
 ```
 Edit the class ```Application``` and rewrite the code as follows:
 ```Java
 package urlshortener;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.*;
@@ -284,6 +284,7 @@ import javax.servlet.http.*;
 import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
 import java.util.*;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import com.google.common.hash.Hashing;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -310,30 +311,41 @@ public class Application {
 		if (urlValidator.isValid(url)) {
 			String id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString();
 			sharedData.put(id, url);
-			return new ResponseEntity<String>(req.getRequestURL().append(id+"\n").toString(), HttpStatus.CREATED);
+            URI location = URI.create(req.getRequestURL().append(id).toString());
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setLocation(location);
+		    return new ResponseEntity<String>(responseHeaders, HttpStatus.CREATED);
 		} else {
 			return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
 		}
 	}
 }
 ```
-Run and test a bad request:
+Run ````gradle compileJava```, run the server and test a bad request:
 ```
-curl -v -d "url=ftp://www.unizar.es/" -X POST http://localhost:8080
-> POST / HTTP/1.1
-> User-Agent: curl/7.30.0
-> Host: localhost:8080
-> Accept: */*
-> Content-Length: 24
-> Content-Type: application/x-www-form-urlencoded
->
-* upload completely sent off: 24 out of 24 bytes
-< HTTP/1.1 400 Bad Request
-< Server: Apache-Coyote/1.1
-< Content-Length: 0
-< Date: Thu, 18 Sep 2014 00:29:18 GMT
-< Connection: close
-<
+$ http -v --form POST localhost:8080 url=ftp://www.unizar.es/
+```
+This is the HTTP request.
+```http
+POST / HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Content-Length: 32
+Content-Type: application/x-www-form-urlencoded; charset=utf-8
+Host: localhost:8080
+User-Agent: HTTPie/0.9.6
+
+url=ftp%3A%2F%2Fwww.unizar.es%2F
+
+```
+This is the HTTP response.
+```http
+HTTP/1.1 400 
+Connection: close
+Content-Length: 0
+Date: Sat, 17 Sep 2016 15:15:16 GMT
+
 ```
 ## Scalable URL Shortener (version 3)
 Add the following dependency to ```build.gradle```:
