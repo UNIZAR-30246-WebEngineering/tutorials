@@ -1,5 +1,7 @@
 # Create a URL Shortener step-by-step
-The goal of this tutorial is the creation of a really short URL shortener in java. 
+The goal of this tutorial is the creation of a powerful URL shortener with a few lines of Java.
+## What is a URL shortener?
+A URL shortener is a web service that makes a long URL short, easy to remember and to share.
 ## Prerequisite
 Prerequisites:
 - [Java SDK v1.7](http://www.java.com/en/) or higher.
@@ -101,8 +103,8 @@ This server can be killed with ```Ctrl-C```.
 Edit the class ```UrlShortener``` and rewrite the code as follows:
 ```Java
 package urlshortener;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.*;
@@ -156,6 +158,7 @@ import javax.servlet.http.*;
 import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
 import java.util.*;
+import java.net.URI;
 @SpringBootApplication
 @Controller
 public class Application {
@@ -177,40 +180,90 @@ public class Application {
 		String url = form.getFirst("url");
 		String id = ""+url.hashCode();
 		sharedData.put(id, url);
-		return new ResponseEntity<String>(req.getRequestURL().append(id+"\n").toString(), HttpStatus.CREATED);
+        URI location = URI.create(req.getRequestURL().append(id).toString());
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setLocation(location);
+		return new ResponseEntity<String>(responseHeaders, HttpStatus.CREATED);
 	}
 }
 ```
 Run it now and you have a working shortener enpoint at port 8080. Let's test it:
 ```
-$ curl -v -d "url=http://www.unizar.es/" -X POST http://localhost:8080
-> POST / HTTP/1.1
-> User-Agent: curl/7.30.0
-> Host: localhost:8080
-> Accept: */*
-> Content-Length: 25
-> Content-Type: application/x-www-form-urlencoded
->
-* upload completely sent off: 25 out of 25 bytes
-< HTTP/1.1 201 Created
-< Server: Apache-Coyote/1.1
-< Content-Type: text/plain;charset=ISO-8859-1
-< Content-Length: 33
-< Date: Thu, 18 Sep 2014 00:18:39 GMT
-<
-http://localhost:8080/2108188503
-$ curl -v localhost:8080/2108188503
-> GET /2108188503 HTTP/1.1
-> User-Agent: curl/7.30.0
-> Host: localhost:8080
-> Accept: */*
->
-< HTTP/1.1 302 Found
-< Server: Apache-Coyote/1.1
-< Location: http://www.unizar.es/
-< Content-Length: 0
-< Date: Thu, 18 Sep 2014 00:21:05 GMT
-<
+$ http -v --form POST localhost:8080 url=http://www.unizar.es/
+```
+This is the HTTP request.
+```http
+POST / HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Content-Length: 33
+Content-Type: application/x-www-form-urlencoded; charset=utf-8
+Host: localhost:8080
+User-Agent: HTTPie/0.9.6
+
+url=http%3A%2F%2Fwww.unizar.es%2F
+
+```
+This is the HTTP response.
+```http
+HTTP/1.1 201 
+Content-Length: 0
+Date: Sat, 17 Sep 2016 14:49:56 GMT
+Location: http://localhost:8080/2108188503
+
+```
+Let's test the returned ```Location```.
+```
+$ http -v localhost:8080/2108188503
+```
+This is the HTTP request.
+```http
+GET /2108188503 HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Host: localhost:8080
+User-Agent: HTTPie/0.9.6
+
+```
+This is the HTTP response.
+```http
+HTTP/1.1 302 
+Content-Length: 0
+Date: Sat, 17 Sep 2016 14:57:28 GMT
+Location: http://www.unizar.es/
+
+```
+A request with a different value will raise an error.
+```
+$ http -v localhost:8080/3108188502
+```
+This is the HTTP request.
+```http
+GET /3108188502 HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Host: localhost:8080
+User-Agent: HTTPie/0.9.6
+
+```
+This is the HTTP response.
+```http
+HTTP/1.1 404 
+Content-Type: application/json;charset=UTF-8
+Date: Sat, 17 Sep 2016 15:02:07 GMT
+Transfer-Encoding: chunked
+
+{
+    "error": "Not Found",
+    "message": "No message available",
+    "path": "/3108188502",
+    "status": 404,
+    "timestamp": 1474124527069
+}
+
 ```
 ## URL Shortener secured (version 2)
 Add the following dependencies to ```build.gradle```:
