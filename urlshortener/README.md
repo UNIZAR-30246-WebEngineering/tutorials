@@ -79,6 +79,7 @@ Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Host: localhost:8080
 User-Agent: HTTPie/0.9.6
+
 ```
 And this the server response (Application):
 ```http
@@ -94,9 +95,8 @@ Transfer-Encoding: chunked
     "status": 404,
     "timestamp": 1474122206734
 }
-
 ```
-This server can be stoped with ```Ctrl-Z```
+This server can be killed with ```Ctrl-C```.
 ## URL Shortener version 0
 Edit the class ```UrlShortener``` and rewrite the code as follows:
 ```Java
@@ -122,19 +122,25 @@ public class Application {
 ```
 You have now a redirecting enpoint at port 8080. Let's test it:
 ```
-$ curl -v localhost:8080/http://www.unizar.es/
-url -v localhost:8080/http://www.unizar.es/
-> GET /http://www.unizar.es/ HTTP/1.1
-> User-Agent: curl/7.30.0
-> Host: localhost:8080
-> Accept: */*
->
-< HTTP/1.1 302 Found
-< Server: Apache-Coyote/1.1
-< Location: http:/www.unizar.es/
-< Content-Length: 0
-< Date: Thu, 18 Sep 2014 00:05:56 GMT
-<
+$ http -v localhost:8080/http://www.unizar.es/
+```
+This is the HTTP request.
+```http
+GET /http://www.unizar.es/ HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Host: localhost:8080
+User-Agent: HTTPie/0.9.6
+
+```
+This is the HTTP response.
+```http
+HTTP/1.1 302 
+Content-Length: 0
+Date: Sat, 17 Sep 2016 14:39:04 GMT
+Location: http:/www.unizar.es/
+
 ```
 ## URL Shortener version 1
 Edit the class ```Application``` and rewrite the code as follows:
