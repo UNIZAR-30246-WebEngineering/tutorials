@@ -2,17 +2,17 @@
 The goal of this tutorial is the creation of a really short URL shortener in java. 
 ## Prerequisite
 Prerequisites:
-- [Java SDK v1.8](http://www.java.com/en/) or higher.
+- [Java SDK v1.7](http://www.java.com/en/) or higher.
 - [Gradle 2.6](http://www.gradle.org/) or higher.
 - [Redis 3.0](http://redis.io/download).
-- [cURL](http://curl.haxx.se/) or similar for testing.
+- [HTTPie](https://httpie.org/) or similar HTTP client for testing.
 - [Sublime Text](https://www.sublimetext.com/) or similar as editor.
 
 ## Create the project stub
 ```
 $ mkdir urlshortener
 $ cd urlshortener
-$ mkdir -p src/main/java
+$ mkdir -p src/main/java/urlshortener
 $ subl src/main/java/urlshortener/Application.java
 ```
 Create the class ```Application``` with a ```main``` method that says hello world.
@@ -32,8 +32,8 @@ $ gradle run
 Edit the class ```Application``` and rewrite the code as follows:
 ```Java
 package urlshortener;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class Application {
 	public static void main(String[] args) {
@@ -44,50 +44,57 @@ public class Application {
 And update ```build.gradle``` with the following code:
 ```Groovy
 buildscript {
-    ext {
-        springVersion = '1.2.6.RELEASE'
-    }
-    repositories {
+	repositories {
         mavenCentral()
         maven { url "http://repo.spring.io/release" }
-    }
+    }    
     dependencies {
-        classpath "org.springframework.boot:spring-boot-gradle-plugin:$springVersion"
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.0.RELEASE")
     }
 }
-apply plugin: 'java'
 apply plugin: 'spring-boot'
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
-    maven { url 'http://repo.spring.io/release' }
-}
+    maven { url "http://repo.spring.io/release" }
+}  
+
 dependencies {
     compile "org.springframework.boot:spring-boot-starter-web"
 }
 ```
 And then run:
 ```
-$ gradle run
+$ gradle bootRun
 ```
 You have now a do-nothing web server listening at port 8080. Let's test it:
+```sh
+$ http -v localhost:8080
 ```
-$ curl -v localhost:8080
-> GET / HTTP/1.1
-> User-Agent: curl/7.30.0
-> Host: localhost:8080
-> Accept: */*
->
-f< HTTP/1.1 404 Not Found
-< Server: Apache-Coyote/1.1
-< Content-Type: application/json;charset=UTF-8
-< Transfer-Encoding: chunked
-< Date: Wed, 17 Sep 2014 23:41:52 GMT
-<
-{"timestamp":1410997312496,"status":404,"error":"Not Found","message":"","path":"/"}
+This is the client request (HTTPie):
+```http
+GET / HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Host: localhost:8080
+User-Agent: HTTPie/0.9.6
+```
+And this the server response (Application):
+```http
+HTTP/1.1 404 
+Content-Type: application/json;charset=UTF-8
+Date: Sat, 17 Sep 2016 14:23:26 GMT
+Transfer-Encoding: chunked
+
+{
+    "error": "Not Found",
+    "message": "No message available",
+    "path": "/",
+    "status": 404,
+    "timestamp": 1474122206734
+}
+
 ```
 This server can be stoped with ```Ctrl-Z```
 ## URL Shortener version 0
