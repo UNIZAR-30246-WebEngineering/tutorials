@@ -1,8 +1,12 @@
 # Create a URL Shortener step-by-step
 The goal of this tutorial is the creation of a powerful URL shortener with a few lines of Java.
 ## What is a URL shortener?
-A URL shortener is a web service that makes a long URL short, easy to remember and to share.
-## Prerequisite
+A URL shortener is a web service that makes a long URL short, easy to remember and to share. The behaviour of the application is as follows:
+
+![URL shortener flow](https://github.com/UNIZAR-30246-WebEngineering/tutorials/blob/master/urlshortener/img/flow.png)
+
+Rembember, the focus of this course is Web Engineering, therefore we will focus on the red interactions in the above figure.
+## Prerequisites
 Prerequisites:
 - [Java SDK v1.7](http://www.java.com/en/) or higher.
 - [Gradle 2.6](http://www.gradle.org/) or higher.
@@ -430,3 +434,30 @@ $ redis-server /usr/local/etc/redis.conf
 64746:M 17 Sep 17:20:25.103 * The server is now ready to accept connections on port 6379
 ```
 Now all your registered URI will stored in your Redis instance. 
+
+## Final remarks
+
+In this repo you will find the final version of the code plus unit and integration tests. For example ```urlshortener.UnitTest``` is able to test the ```shortener``` method by mocking the web server and the storage. 
+```java
+@Test
+public void testRedirection() throws Exception {
+    given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
+    given(valueOperations.get(HASH)).willReturn(HTTP_EXAMPLE_COM);
+    this.mvc.perform(get("/"+HASH)).
+        andExpect(status().isFound()).
+	andExpect(header().string("Location", is(HTTP_EXAMPLE_COM)));
+}
+```
+Meanwhile in  ```urlshortener.IntegrationTest``` it is a test that do the same with a running URL shortener and a Redis instance.
+```java
+@Test
+public void testRedirection() throws Exception {
+    MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+    parts.add("url", HTTP_EXAMPLE_COM);
+    new TestRestTemplate().postForEntity("http://localhost:" + this.port, parts, String.class);
+    ResponseEntity<String> response = new TestRestTemplate()
+        .getForEntity("http://localhost:" + this.port + "/" + HASH_HTTP_EXAMPLE_COM, String.class);
+    assertThat(response.getStatusCode(), is(HttpStatus.FOUND));
+    assertThat(response.getHeaders().getLocation(), is(new URI(HTTP_EXAMPLE_COM)));
+}
+```
