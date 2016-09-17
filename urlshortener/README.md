@@ -348,15 +348,15 @@ Date: Sat, 17 Sep 2016 15:15:16 GMT
 
 ```
 ## Scalable URL Shortener (version 3)
-Add the following dependency to ```build.gradle```:
+Add the following dependency to ```build.gradle``` after ```compile "com.google.guava:guava:19.0" ```:
 ```groovy
 compile "org.springframework.boot:spring-boot-starter-redis"
 ```
 Edit the class ```Application``` and rewrite the code as follows:
 ```java
 package urlshortener;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.*;
@@ -365,6 +365,7 @@ import javax.servlet.http.*;
 import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
 import java.util.*;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import com.google.common.hash.Hashing;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -393,7 +394,10 @@ public class Application {
 		if (urlValidator.isValid(url)) {
 			String id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString();
 			sharedData.opsForValue().set(id, url);
-			return new ResponseEntity<String>(req.getRequestURL().append(id+"\n").toString(), HttpStatus.CREATED);
+            URI location = URI.create(req.getRequestURL().append(id).toString());
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setLocation(location);
+		    return new ResponseEntity<String>(responseHeaders, HttpStatus.CREATED);
 		} else {
 			return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
 		}
@@ -403,4 +407,26 @@ public class Application {
 Ensure that your Redis instance is running. 
 ```
 $ redis-server /usr/local/etc/redis.conf
+                _._                                                  
+           _.-``__ ''-._                                             
+      _.-``    `.  `_.  ''-._           Redis 3.2.3 (00000000/0) 64 bit
+  .-`` .-```.  ```\/    _.,_ ''-._                                   
+ (    '      ,       .-`  | `,    )     Running in standalone mode
+ |`-._`-...-` __...-.``-._|'` _.-'|     Port: 6379
+ |    `-._   `._    /     _.-'    |     PID: 64746
+  `-._    `-._  `-./  _.-'    _.-'                                   
+ |`-._`-._    `-.__.-'    _.-'_.-'|                                  
+ |    `-._`-._        _.-'_.-'    |           http://redis.io        
+  `-._    `-._`-.__.-'_.-'    _.-'                                   
+ |`-._`-._    `-.__.-'    _.-'_.-'|                                  
+ |    `-._`-._        _.-'_.-'    |                                  
+  `-._    `-._`-.__.-'_.-'    _.-'                                   
+      `-._    `-.__.-'    _.-'                                       
+          `-._        _.-'                                           
+              `-.__.-'                                               
+
+64746:M 17 Sep 17:20:25.102 # Server started, Redis version 3.2.3
+64746:M 17 Sep 17:20:25.103 * DB loaded from disk: 0.001 seconds
+64746:M 17 Sep 17:20:25.103 * The server is now ready to accept connections on port 6379
 ```
+Now all your registered URI will stored in your Redis instance. 
