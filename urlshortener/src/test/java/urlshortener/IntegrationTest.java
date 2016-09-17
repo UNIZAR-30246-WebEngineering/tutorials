@@ -21,7 +21,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment= RANDOM_PORT)
 @DirtiesContext
-public class IntegrationTests {
+public class IntegrationTest {
 
 	private static final String HTTP_EXAMPLE_COM = "http://example.com/";
 	private static final String HASH_HTTP_EXAMPLE_COM = "f684a3c4";
@@ -31,24 +31,23 @@ public class IntegrationTests {
 
 	@Test
 	public void testCreation() throws Exception {
-		ResponseEntity<String> entity = createLink(HTTP_EXAMPLE_COM);
-		assertThat(entity.getStatusCode(), is(HttpStatus.CREATED));
-		assertThat(entity.getHeaders().getLocation(), is(URI.create("http://localhost:" + this.port + "/" + HASH_HTTP_EXAMPLE_COM)));
+        MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+        parts.add("url", HTTP_EXAMPLE_COM);
+        ResponseEntity<String> response = new TestRestTemplate().postForEntity("http://localhost:" + this.port, parts,
+                String.class);
+		assertThat(response.getStatusCode(), is(HttpStatus.CREATED));
+		assertThat(response.getHeaders().getLocation(), is(URI.create("http://localhost:" + this.port + "/" + HASH_HTTP_EXAMPLE_COM)));
 	}
 
-	private ResponseEntity<String> createLink(String link) {
-		MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
-		parts.add("url", link);
-		return new TestRestTemplate().postForEntity("http://localhost:" + this.port, parts,
-				String.class);
-	}
-
-	@Test
+    @Test
 	public void testRedirection() throws Exception {
-		createLink(HTTP_EXAMPLE_COM);
-		ResponseEntity<String> entity = new TestRestTemplate()
+        MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+        parts.add("url", HTTP_EXAMPLE_COM);
+        new TestRestTemplate().postForEntity("http://localhost:" + this.port, parts,
+                String.class);
+        ResponseEntity<String> response = new TestRestTemplate()
 				.getForEntity("http://localhost:" + this.port + "/" + HASH_HTTP_EXAMPLE_COM, String.class);
-		assertThat(entity.getStatusCode(), is(HttpStatus.FOUND));
-		assertThat(entity.getHeaders().getLocation(), is(new URI(HTTP_EXAMPLE_COM)));
+		assertThat(response.getStatusCode(), is(HttpStatus.FOUND));
+		assertThat(response.getHeaders().getLocation(), is(new URI(HTTP_EXAMPLE_COM)));
 	}
 }
