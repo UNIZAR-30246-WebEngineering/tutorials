@@ -327,7 +327,7 @@ public class Application {
 ```
 Run ````gradle compileJava```, run the server and test a bad request:
 ```
-$ http -v --form POST localhost:8080 url=ftp://www.unizar.es/
+$ http -v --form POST localhost:8080 ur l=ftp://www.unizar.es/
 ```
 This is the HTTP request.
 ```http

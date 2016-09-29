@@ -1,1 +1,2 @@
 include ":urlshortener"
+include ":urlshortener-docker"

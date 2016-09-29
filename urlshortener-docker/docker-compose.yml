@@ -1,0 +1,14 @@
+version : '2'
+services:
+
+  urlshortener:
+    build:
+      context: .
+      dockerfile: src/main/docker/springapp.dockerfile
+    ports:
+      - "8080:8080"
+    links:
+      - redis
+
+  redis:
+    image: redis:latest

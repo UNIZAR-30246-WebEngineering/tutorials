@@ -1,0 +1,43 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "http://repo.spring.io/release" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.0.RELEASE")
+    }
+}
+apply plugin: "spring-boot"
+
+jar {
+    baseName = 'urlshortener-docker'
+    version =  '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+    maven { url "http://repo.spring.io/release" }
+}
+
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "org.springframework.boot:spring-boot-starter-redis"
+    compile "commons-validator:commons-validator:1.5.1"
+    compile "com.google.guava:guava:19.0"
+
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+    testCompile "org.apache.httpcomponents:httpclient:4.5.2"
+}
+
+
+task compose(type: Exec) {
+    dependsOn   'build'
+    commandLine 'docker-compose', 'build'
+    errorOutput = new ByteArrayOutputStream()
+    standardOutput = new ByteArrayOutputStream()
+}
+
+task up(type: Exec) {
+    dependsOn   'compose'
+    commandLine 'docker-compose', 'up', '--remove-orphans'
+}
