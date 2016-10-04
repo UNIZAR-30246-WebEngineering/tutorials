@@ -1,14 +1,14 @@
 version : '2'
 services:
 
-  urlshortener:
+  app:
     build:
       context: .
-      dockerfile: src/main/docker/springapp.dockerfile
+      dockerfile: src/main/docker/app.dockerfile
     ports:
       - "8080:8080"
     links:
-      - redis
+      - db
 
-  redis:
+  db:
     image: redis:latest

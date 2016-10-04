@@ -14,7 +14,7 @@ The objective is the creation of an application with two containers as the diagr
 ![Docker app](img/docker-app.png)
 
 ## The *Dockerfile* 
-Create a file in `src/main/docker` named `springapp.dockerfile`:
+Create a file in `src/main/docker` named `app.dockerfile`:
 ```dockerfile 
 FROM openjdk:alpine
 ADD build/libs/urlshortener-docker-0.1.0.jar app.jar
@@ -32,33 +32,33 @@ Create a file named `docker-compose.yml`:
  version : '2'
  services:
  
-   urlshortener:
+   app:
      build:
        context: .
-       dockerfile: src/main/docker/springapp.dockerfile
+       dockerfile: src/main/docker/app.dockerfile
      ports:
        - "8080:8080"
      links:
-       - redis
+       - db
  
-   redis:
+   db:
      image: redis:latest
 ```
-This file defines two services (`urlshortener` and `redis`). The first will
-use the instructions in `springapp.dockerfile` for being built. It will expose
-its port 8080 to the external world as 8080 and will have access to the `redis`
-container through network internal to *Docker*. The second (`redis`) will 
+This file defines two services (`app` and `db`). The first will
+use the instructions in `app.dockerfile` for being built. It will expose
+its port 8080 to the external world as 8080 and will have access to the `db`
+container through network internal to *Docker*. The second (`db`) will 
 be [the latest redis image](https://hub.docker.com/_/redis/). The hostname of this
-container in the internal network will be `redis`.
+container in the internal network will be `db`.
  
 ## Changes from the original code
 The application needs to know where is the Redis instance within docker. 
-An approach is the use of a properties file. `springapp.dockerfile` tells
+An approach is the use of a properties file. `app.dockerfile` tells
 Docker to run the app with the profile `docker` enabled. Then we should create
 the file `application-docker.properties` in `src/main/resources` with the following
 content:
 ```
-spring.redis.host=redis
+spring.redis.host=db
 ```
 As simply as this.
 
