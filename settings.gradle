@@ -1,2 +1,3 @@
 include ":urlshortener"
 include ":urlshortener-docker"
+include ":mood"
