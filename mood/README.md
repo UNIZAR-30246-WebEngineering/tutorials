@@ -49,7 +49,8 @@ of `gradle`.
 1. Make sure that `gradle` is available.
 2. In a terminal window, go to `mood` folder.
 3. Enter the following command to run the application:
+
     ```bash
     gradle bootRun
     ```
-4. In a web browser, enter the following URL http://localhost:8080/mood/report
+4. In a web browser, enter the following URL `http://localhost:8080/mood/report`
