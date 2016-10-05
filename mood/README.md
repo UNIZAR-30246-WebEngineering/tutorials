@@ -7,7 +7,8 @@ The mood example application is comprised of three components:
 
 * `mood.web.MoodServlet`. This `HttpServlet` is the presentation layer of 
 the application and. The servlet implements the `doGet` and `doPost` methods.
-The @WebServlet`` annotation specifies the URL pattern:
+The `@WebServlet` annotation specifies the URL pattern:
+
     ```java
     @WebServlet("/report")
     public class MoodServlet extends HttpServlet {
@@ -20,6 +21,7 @@ The @WebServlet`` annotation specifies the URL pattern:
 * `mood.web.TimeOfDayFilter`. This `Filter` sets an initial vale to the attribute `mood`. 
 The filter intercepts calls to the server and calls the `doFilter` that sets the value 
 of the attribute `mood`.
+
     ```java
     @WebFilter(filterName = "TimeOfDayFilter", urlPatterns = {"/*"}
        , initParams = {@WebInitParam(name = "mood", value = "awake")})
@@ -35,6 +37,7 @@ of the attribute `mood`.
 the lifecycle of the servlet.
 
 The _context path_ of the application is specified in `application.properties`:
+
 ```properties
 server.context-path=/mood
 ```
