@@ -1,4 +1,4 @@
-# The mood Example Application: a WebServlet application
+# The mood Example controller.Application: a WebServlet application
 The `mood` example application is a Spring Boot adaptation of the
 `mood` example of the [Java EE 7 Tutorial](https://docs.oracle.com/javaee/7/tutorial/servlets015.htm#GKCPG). 
 It is a simple example that displays Duke's moods at different times during the day.

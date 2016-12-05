@@ -19,31 +19,31 @@ Prerequisites:
 $ mkdir urlshortener
 $ cd urlshortener
 $ mkdir -p src/main/java/urlshortener
-$ subl src/main/java/urlshortener/Application.java
+$ subl src/main/java/urlshortener/controller.Application.java
 ```
-Create the class ```Application``` with a ```main``` method that says hello world.
+Create the class ```controller.Application``` with a ```main``` method that says hello world.
 ```
 $ subl build.gradle
 ```
 Copy the following code:
 ```Groovy
 apply plugin:'application'
-mainClassName = 'urlshortener.Application'
+mainClassName = 'urlshortener.controller.Application'
 ```
 And then run:
 ```
 $ gradle run
 ```
 ## Transform into a spring-boot Web application
-Edit the class ```Application``` and rewrite the code as follows:
+Edit the class ```controller.Application``` and rewrite the code as follows:
 ```Java
 package urlshortener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
-public class Application {
+public class controller.Application {
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		SpringApplication.run(controller.Application.class, args);
 	}
 }
 ```
@@ -87,7 +87,7 @@ Host: localhost:8080
 User-Agent: HTTPie/0.9.6
 
 ```
-And this the server response (Application):
+And this the server response (controller.Application):
 ```http
 HTTP/1.1 404 
 Content-Type: application/json;charset=UTF-8
@@ -116,9 +116,9 @@ import java.io.IOException;
 import javax.servlet.http.*;
 @SpringBootApplication
 @Controller
-public class Application {
+public class controller.Application {
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		SpringApplication.run(controller.Application.class, args);
 	}
 	@RequestMapping(value="/**", method = RequestMethod.GET)
 	public void redirectTo(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -149,7 +149,7 @@ Location: http:/www.unizar.es/
 
 ```
 ## URL Shortener version 1
-Edit the class ```Application``` and rewrite the code as follows:
+Edit the class ```controller.Application``` and rewrite the code as follows:
 ```Java
 package urlshortener;
 import org.springframework.boot.SpringApplication;
@@ -165,9 +165,9 @@ import java.util.*;
 import java.net.URI;
 @SpringBootApplication
 @Controller
-public class Application {
+public class controller.Application {
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		SpringApplication.run(controller.Application.class, args);
 	}
 	private Map<String,String> sharedData = new HashMap<String,String>();
 	@RequestMapping(value="/{id}", method = RequestMethod.GET)
@@ -275,7 +275,7 @@ Add the following dependencies to ```build.gradle``` after ```compile "org.sprin
 compile "commons-validator:commons-validator:1.5.1"
 compile "com.google.guava:guava:19.0"    
 ```
-Edit the class ```Application``` and rewrite the code as follows:
+Edit the class ```controller.Application``` and rewrite the code as follows:
 ```Java
 package urlshortener;
 import org.springframework.boot.SpringApplication;
@@ -294,9 +294,9 @@ import com.google.common.hash.Hashing;
 import org.apache.commons.validator.routines.UrlValidator;
 @SpringBootApplication
 @Controller
-public class Application {
+public class controller.Application {
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		SpringApplication.run(controller.Application.class, args);
 	}
 	private Map<String,String> sharedData = new HashMap<String,String>();
 	@RequestMapping(value="/{id}", method = RequestMethod.GET)
@@ -356,7 +356,7 @@ Add the following dependency to ```build.gradle``` after ```compile "com.google.
 ```groovy
 compile "org.springframework.boot:spring-boot-starter-redis"
 ```
-Edit the class ```Application``` and rewrite the code as follows:
+Edit the class ```controller.Application``` and rewrite the code as follows:
 ```java
 package urlshortener;
 import org.springframework.boot.SpringApplication;
@@ -377,9 +377,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 @SpringBootApplication
 @Controller
-public class Application {
+public class controller.Application {
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		SpringApplication.run(controller.Application.class, args);
 	}
 	@Autowired private StringRedisTemplate sharedData;
 	@RequestMapping(value="/{id}", method = RequestMethod.GET)
