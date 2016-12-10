@@ -4,3 +4,4 @@
 * [URL Shortener in Docker](urlshortener-docker)
 * [The mood Example controller.Application: a WebServlet application](mood)
 * [Differences between MVC and REST in Spring Framework](controller-mvc-rest)
+* [Parsing the user agent string](user-agent)
