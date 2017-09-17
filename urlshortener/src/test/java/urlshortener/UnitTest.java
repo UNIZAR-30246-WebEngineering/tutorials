@@ -50,7 +50,8 @@ public class UnitTest {
 		given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
 		given(valueOperations.get(HASH)).willReturn(HTTP_EXAMPLE_COM);
 		this.mvc.perform(get("/"+HASH)).
-				andExpect(status().isFound()).
+				andExpect(status().isTemporaryRedirect()).
 				andExpect(header().string("Location", is(HTTP_EXAMPLE_COM)));
 	}
+
 }
