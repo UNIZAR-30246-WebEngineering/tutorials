@@ -22,36 +22,35 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(Application.class)
 public class UnitTest {
 
-	private static final String HTTP_EXAMPLE_COM = "http://example.com/";
-	private static final String HASH = "f684a3c4";
-	private static final String HASH_HTTP_EXAMPLE_COM = "http://localhost/"+HASH;
+    private static final String HTTP_EXAMPLE_COM = "http://example.com/";
+    private static final String HASH = "f684a3c4";
+    private static final String HASH_HTTP_EXAMPLE_COM = "http://localhost/" + HASH;
 
-	@MockBean
-	private ValueOperations<String, String> valueOperations;
+    @MockBean
+    private ValueOperations<String, String> valueOperations;
 
-	@MockBean
-	private StringRedisTemplate stringRedisTemplate;
+    @MockBean
+    private StringRedisTemplate stringRedisTemplate;
 
-	@Autowired
-	private MockMvc mvc;
+    @Autowired
+    private MockMvc mvc;
 
-	@Test
-	public void testCreation() throws Exception {
-		given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
-		this.mvc.perform(post("/")
-				.contentType(MediaType.APPLICATION_FORM_URLENCODED).param("url", HTTP_EXAMPLE_COM)).
-				andExpect(status().isCreated()).
-				andExpect(header().string("Location", is(HASH_HTTP_EXAMPLE_COM)));
-	}
+    @Test
+    public void testCreation() throws Exception {
+        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
+        this.mvc.perform(post("/")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED).param("url", HTTP_EXAMPLE_COM)).
+                andExpect(status().isCreated()).
+                andExpect(header().string("Location", is(HASH_HTTP_EXAMPLE_COM)));
+    }
 
-
-	@Test
-	public void testRedirection() throws Exception {
-		given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
-		given(valueOperations.get(HASH)).willReturn(HTTP_EXAMPLE_COM);
-		this.mvc.perform(get("/"+HASH)).
-				andExpect(status().isTemporaryRedirect()).
-				andExpect(header().string("Location", is(HTTP_EXAMPLE_COM)));
-	}
+    @Test
+    public void testRedirection() throws Exception {
+        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get(HASH)).willReturn(HTTP_EXAMPLE_COM);
+        this.mvc.perform(get("/" + HASH)).
+                andExpect(status().isTemporaryRedirect()).
+                andExpect(header().string("Location", is(HTTP_EXAMPLE_COM)));
+    }
 
 }

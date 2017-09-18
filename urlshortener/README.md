@@ -12,7 +12,7 @@ Rembember, the focus of this course is Web Engineering, therefore we will focus 
 Prerequisites:
 - [Java SDK v1.8](http://www.java.com/en/) or higher.
 - [Gradle 4.1](http://www.gradle.org/) or higher.
-- [Redis 3.0](http://redis.io/download).
+- [Redis 3.0](http://redis.io/download) or higher.
 - [HTTPie](https://httpie.org/) or similar HTTP client for testing.
 - [Sublime Text](https://www.sublimetext.com/) or similar as editor.
 
@@ -50,13 +50,15 @@ Edit the class `Application` and rewrite the code as follows:
 
 ```java
 package urlshortener;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 @SpringBootApplication
 public class Application {
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
 }
 ```
 
@@ -127,23 +129,28 @@ Edit the class `Application` and rewrite the code as follows:
 
 ```Java
 package urlshortener;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.HandlerMapping;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import javax.servlet.http.*;
+
 @SpringBootApplication
 @Controller
 public class Application {
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
-	@GetMapping(value="/**")
-	public void redirectTo(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		resp.sendRedirect(req.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString().substring(1));
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    @GetMapping(value = "/**")
+    public void redirectTo(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.sendRedirect(req.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString().substring(1));
+    }
 }
 ```
 
@@ -181,45 +188,56 @@ Edit the class `Application` and rewrite the code as follows:
 
 ```Java
 package urlshortener;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.*;
-import java.io.IOException;
-import javax.servlet.http.*;
-import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
-import java.util.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
 @SpringBootApplication
 @Controller
 public class Application {
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
-	private Map<String,String> sharedData = new HashMap<>();
-	@GetMapping(value="/{id}")
-	public ResponseEntity<Void> redirectTo(@PathVariable String id) throws IOException {
-		String key = sharedData.get(id);
-		if (key != null) {
-			HttpHeaders responseHeaders = new HttpHeaders();
-			responseHeaders.setLocation(URI.create(key));
-			return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    private Map<String, String> sharedData = new HashMap<>();
+
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<Void> redirectTo(@PathVariable String id) throws IOException {
+        String key = sharedData.get(id);
+        if (key != null) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setLocation(URI.create(key));
+            return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
     @PostMapping
-	public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String,String> form, HttpServletRequest req) throws IOException {
-		String url = form.getFirst("url");
-		String id = ""+url.hashCode();
-		sharedData.put(id, url);
+    public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req) throws IOException {
+        String url = form.getFirst("url");
+        String id = "" + url.hashCode();
+        sharedData.put(id, url);
         URI location = URI.create(req.getRequestURL().append(id).toString());
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setLocation(location);
-		return new ResponseEntity<String>(responseHeaders, HttpStatus.CREATED);
-	}
+        return new ResponseEntity<>(responseHeaders, HttpStatus.CREATED);
+    }
 }
 ```
 
@@ -318,57 +336,68 @@ compile 'commons-validator:commons-validator:1.6'
 compile 'com.google.guava:guava:23.0'   
 ```
 
-Edit the class ```Application``` and rewrite the code as follows:
+Edit the class `Application` and rewrite the code as follows:
 
 ```java
 package urlshortener;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.*;
-import java.io.IOException;
-import javax.servlet.http.*;
-import org.springframework.http.*;
-import org.springframework.util.MultiValueMap;
-import java.util.*;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
+
 import com.google.common.hash.Hashing;
 import org.apache.commons.validator.routines.UrlValidator;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
 @SpringBootApplication
 @Controller
 public class Application {
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
-	private Map<String,String> sharedData = new HashMap<>();
-	@GetMapping(value="/{id}")
-	public ResponseEntity<Void> redirectTo(@PathVariable String id) throws IOException {
-		String key = sharedData.get(id);
-		if (key != null) {
-			HttpHeaders responseHeaders = new HttpHeaders();
-			responseHeaders.setLocation(URI.create(key));
-			return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    private Map<String, String> sharedData = new HashMap<>();
+
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<Void> redirectTo(@PathVariable String id) throws IOException {
+        String key = sharedData.get(id);
+        if (key != null) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setLocation(URI.create(key));
+            return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
     @PostMapping
-	public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String,String> form, HttpServletRequest req) throws IOException {
-		String url = form.getFirst("url");
-		UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
-		if (urlValidator.isValid(url)) {
-			String id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString();
-			sharedData.put(id, url);
+    public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req) throws IOException {
+        String url = form.getFirst("url");
+        UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
+        if (urlValidator.isValid(url)) {
+            String id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString();
+            sharedData.put(id, url);
             URI location = URI.create(req.getRequestURL().append(id).toString());
             HttpHeaders responseHeaders = new HttpHeaders();
             responseHeaders.setLocation(location);
-		    return new ResponseEntity<String>(responseHeaders, HttpStatus.CREATED);
-		} else {
-			return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-		}
-	}
+            return new ResponseEntity<>(responseHeaders, HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 }
 ```
 
@@ -415,55 +444,65 @@ Edit the class `Application` and rewrite the code as follows:
 
 ```java
 package urlshortener;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.*;
-import java.io.IOException;
-import javax.servlet.http.*;
-import org.springframework.http.*;
-import org.springframework.util.MultiValueMap;
-import java.util.*;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
+
 import com.google.common.hash.Hashing;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+
 @SpringBootApplication
 @Controller
 public class Application {
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
-	@Autowired private StringRedisTemplate sharedData;
-  	@GetMapping(value="/{id}")
-	public ResponseEntity<Void> redirectTo(@PathVariable String id) throws IOException {
-		String key = sharedData.opsForValue().get(id);
-		if (key != null) {
-			HttpHeaders responseHeaders = new HttpHeaders();
-			responseHeaders.setLocation(URI.create(key));
-			return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    @Autowired
+    private StringRedisTemplate sharedData;
+
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<Void> redirectTo(@PathVariable String id) throws IOException {
+        String key = sharedData.opsForValue().get(id);
+        if (key != null) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setLocation(URI.create(key));
+            return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
     @PostMapping
-	public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String,String> form, HttpServletRequest req) throws IOException {
-		String url = form.getFirst("url");
-		UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
-		if (urlValidator.isValid(url)) {
-			String id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString();
-			sharedData.opsForValue().set(id, url);
+    public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req) throws IOException {
+        String url = form.getFirst("url");
+        UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
+        if (urlValidator.isValid(url)) {
+            String id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString();
+            sharedData.opsForValue().set(id, url);
             URI location = URI.create(req.getRequestURL().append(id).toString());
             HttpHeaders responseHeaders = new HttpHeaders();
             responseHeaders.setLocation(location);
-		    return new ResponseEntity<String>(responseHeaders, HttpStatus.CREATED);
-		} else {
-			return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-		}
-	}
+            return new ResponseEntity<>(responseHeaders, HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 }
 ```
 
@@ -498,7 +537,15 @@ $ redis-server /usr/local/etc/redis.conf
 Or if you have [Docker](https://www.docker.com/) installed:
 
 ```bash
-$ docker-compose -f src/main/docker/redis.yml up -d
+$ docker-compose -f src/main/docker/redis.yml up
+...
+Creating network "docker_default" with the default driver
+Creating docker_redis_1 ... 
+Creating docker_redis_1 ... done
+Attaching to docker_redis_1
+redis_1  | 1:C 18 Sep 16:33:40.313 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+redis_1  | 1:C 18 Sep 16:33:40.313 # Redis version=4.0.1, bits=64, commit=00000000, modified=0, pid=1, just started
+...
 ```
 
 Now all your registered URI will stored in your Redis instance. You can run the tests again. 
@@ -554,7 +601,6 @@ public class UnitTest {
 	@Autowired
 	private MockMvc mvc;
 }
-
 ```
 
 Inside we can find the unit test for the creation:
