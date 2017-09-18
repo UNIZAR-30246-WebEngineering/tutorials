@@ -1,3 +1,4 @@
 FROM openjdk:alpine
-ADD build/libs/urlshortener-docker-0.1.0.jar app.jar
+ARG BUILD_VERSION
+ADD build/libs/urlshortener-docker-${BUILD_VERSION}.jar app.jar
 ENTRYPOINT ["java","-jar", "-Dspring.profiles.active=docker", "/app.jar"]
