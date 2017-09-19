@@ -1,7 +1,6 @@
-include ":urlshortener"
-include ":urlshortener-docker"
-include ":mood"
-include ":controller-mvc-rest"
-include ":user-agent"
+include 'urlshortener'
+include 'urlshortener-docker'
+include 'mood'
+include 'controller-mvc-rest'
 include 'user-agent'
 
