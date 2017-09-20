@@ -1,6 +1,6 @@
 package urlshortener;
-import com.google.common.hash.Hashing;
 
+import com.google.common.hash.Hashing;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -11,35 +11,37 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 @SpringBootApplication
 @Controller
 public class Application {
+	@Autowired
+	private StringRedisTemplate sharedData;
+
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}
-	@Autowired private StringRedisTemplate sharedData;
-	@RequestMapping(value="/{id}", method = RequestMethod.GET)
-	public void redirectTo(@PathVariable String id, HttpServletResponse resp) throws IOException {
+
+	@GetMapping(value = "/{id}")
+	public ResponseEntity<Void> redirectTo(@PathVariable String id) throws IOException {
 		String key = sharedData.opsForValue().get(id);
 		if (key != null) {
-			resp.sendRedirect(key);
+			HttpHeaders responseHeaders = new HttpHeaders();
+			responseHeaders.setLocation(URI.create(key));
+			return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
 		} else {
-			resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
+
 	@RequestMapping(method = RequestMethod.POST)
-	public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String,String> form, HttpServletRequest req) throws IOException {
+	public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req) throws IOException {
 		String url = form.getFirst("url");
 		UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
 		if (urlValidator.isValid(url)) {
