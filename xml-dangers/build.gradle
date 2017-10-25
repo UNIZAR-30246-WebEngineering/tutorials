@@ -1,0 +1,5 @@
+dependencies {
+    testCompile "org.springframework.boot:spring-boot-starter-web"
+    testCompile("net.sf.uadetector:uadetector-resources:2014.10")
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+}

