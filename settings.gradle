@@ -1,7 +1,8 @@
-include 'urlshortener'
-include 'urlshortener-docker'
-include 'mood'
-include 'controller-mvc-rest'
+include ":urlshortener"
+include ":urlshortener-docker"
+include ":mood"
+include ":controller-mvc-rest"
+include ":user-agent"
 include 'user-agent'
 include 'xml-dangers'
 
