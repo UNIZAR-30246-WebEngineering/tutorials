@@ -3,9 +3,9 @@ package urlshortener;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -36,7 +37,7 @@ public class IntegrationTest {
     private int port;
 
     @Test
-    public void testCreation() throws Exception {
+    public void testCreation() {
         MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
         parts.add("url", HTTP_EXAMPLE_COM);
         ResponseEntity<String> response = restTemplate.postForEntity("/", parts,
@@ -54,6 +55,7 @@ public class IntegrationTest {
         MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
         parts.add("url", HTTP_EXAMPLE_COM);
         ResponseEntity<String> created = restTemplate.postForEntity("/", parts, String.class);
+        assertThat(created.getHeaders().getLocation(), is(notNullValue()));
         String path = created.getHeaders().getLocation().getPath();
         ResponseEntity<String> response = restTemplate.getForEntity(path, String.class);
         assertThat(response.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));

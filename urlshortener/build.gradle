@@ -1,9 +1,31 @@
-dependencies {
-    compile "org.springframework.boot:spring-boot-starter-web"
-    compile "org.springframework.boot:spring-boot-starter-data-redis"
-    compile "commons-validator:commons-validator:1.6"
-    compile "com.google.guava:guava:23.0"
+apply plugin: 'maven-publish'
 
-    testCompile "org.springframework.boot:spring-boot-starter-test"
-    testCompile "org.apache.httpcomponents:httpclient:4.5.3"
+publishToMavenLocal.dependsOn assemble
+
+jar {
+    enabled = true
+}
+
+bootJar {
+    classifier = 'boot'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+}
+
+dependencies {
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    compile 'org.springframework.boot:spring-boot-starter-data-redis'
+    compile 'org.springframework.boot:spring-boot-starter-actuator'
+
+    compile 'commons-validator:commons-validator:1.6'
+    compile 'com.google.guava:guava:23.0'
+
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+    testCompile 'org.apache.httpcomponents:httpclient'
 }

@@ -1,18 +1,15 @@
-jar {
+bootJar {
     baseName = 'urlshortener-docker'
-    version =  '0.1.0'
+    mainClassName = 'urlshortener.Application'
 }
 
 dependencies {
-    compile "org.springframework.boot:spring-boot-starter-web"
-    compile "org.springframework.boot:spring-boot-starter-data-redis"
-    compile "commons-validator:commons-validator:1.6"
-    compile "com.google.guava:guava:23.0"
+    compile(project(":urlshortener"))
 }
 
 
 task compose(type: Exec) {
-    dependsOn   'build'
+    dependsOn   'build', ':urlshortener:publishToMavenLocal'
     commandLine 'docker-compose', 'build'
     errorOutput = new ByteArrayOutputStream()
     standardOutput = new ByteArrayOutputStream()

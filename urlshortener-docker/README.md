@@ -8,7 +8,7 @@ This tutorial shows:
 - How to adapt your *Spring Boot* app to the new environment.
 - How to run `docker-compose` to start and run your entire app.
 
-This tutorial uses the final code of [Create a URL Shortener step-by-step](../urlshortener/README.md). 
+This tutorial requires access to the final code of [Create a URL Shortener step-by-step](../urlshortener/README.md). 
 The objective is the creation of an application with two containers as the diagram below.
 
 ![Docker app](img/docker-app.png)
@@ -41,7 +41,7 @@ services:
       context: .
       dockerfile: src/main/docker/app.dockerfile
       args:
-      - BUILD_VERSION=0.1.0
+      - BUILD_VERSION=2018
     ports:
       - "8080:8080"
     links:
@@ -73,11 +73,50 @@ As simply as this.
 ## Running the app with Docker compose
 
 We assume that Docker is correctly installed in the machine. 
+
+We need first to update the `build.gradle` file of the project `urlshortener`.
+We assume that this project and `urlshortener` are  modules of the same multimodule gradle project
+
+```groovy
+apply plugin: 'maven-publish'
+
+publishToMavenLocal.dependsOn assemble
+
+// We are going to build an standalone jar 
+jar {
+    enabled = true
+}
+
+// The big fat jar has its own classifier to avoid a clash with the standalone jar
+bootJar {
+    classifier = 'boot'
+}
+
+// And we publish in the local repository the standalone jar
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+}
+```
+
 To ease its use we add the following task to `build.gradle`:
 
 ```groovy
+bootJar {
+    baseName = 'urlshortener-docker'
+    mainClassName = 'urlshortener.Application'
+}
+
+dependencies {
+    compile(project(":urlshortener"))
+}
+
+
 task compose(type: Exec) {
-    dependsOn   'build'
+    dependsOn   'build', ':urlshortener:publishToMavenLocal'
     commandLine 'docker-compose', 'build'
     errorOutput = new ByteArrayOutputStream()
     standardOutput = new ByteArrayOutputStream()
