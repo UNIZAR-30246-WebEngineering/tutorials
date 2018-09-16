@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: src/main/docker/app.dockerfile
       args:
-      - BUILD_VERSION=0.1.0
+      - BUILD_VERSION=2018
     ports:
       - "8080:8080"
     links:

@@ -65,19 +65,36 @@ public class Application {
 And update `build.gradle` with the following code:
 
 ```groovy
-plugins {
-    id 'org.springframework.boot' version '1.5.7.RELEASE'
+buildscript {
+    ext {
+        springBootVersion = '2.0.5.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
 }
 
+// Enable Spring Boot helper tasks
 apply plugin: 'org.springframework.boot'
+
+// Enable the automatic management of some versions
+apply plugin: 'io.spring.dependency-management'
+
+// We are Java 8
+apply plugin: 'java'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
-    maven { url 'http://repo.spring.io/release' }
-}  
+}
 
 dependencies {
-    compile 'org.springframework.boot:spring-boot-starter-web'
+    // Version is managed by io.spring.dependency-management
+    compile "org.springframework.boot:spring-boot-starter-web"
 }
 ```
 
@@ -148,8 +165,9 @@ public class Application {
     }
 
     @GetMapping(value = "/**")
-    public void redirectTo(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.sendRedirect(req.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString().substring(1));
+    public void redirectTo(HttpServletRequest req, HttpServletResponse resp) {
+        resp.sendRedirect(req.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE)
+                             .toString().substring(1));
     }
 }
 ```
@@ -217,7 +235,7 @@ public class Application {
     private Map<String, String> sharedData = new HashMap<>();
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<Void> redirectTo(@PathVariable String id) throws IOException {
+    public ResponseEntity<Void> redirectTo(@PathVariable String id) {
         String key = sharedData.get(id);
         if (key != null) {
             HttpHeaders responseHeaders = new HttpHeaders();
@@ -229,7 +247,7 @@ public class Application {
     }
 
     @PostMapping
-    public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req) throws IOException {
+    public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req)  {
         String url = form.getFirst("url");
         String id = "" + url.hashCode();
         sharedData.put(id, url);
@@ -336,6 +354,9 @@ compile 'commons-validator:commons-validator:1.6'
 compile 'com.google.guava:guava:23.0'   
 ```
 
+Note that the version is not managed in these libraries. 
+This happens because `guava` and `commons-validator` are not used by in the Spring Framework projects.
+
 Edit the class `Application` and rewrite the code as follows:
 
 ```java
@@ -384,10 +405,10 @@ public class Application {
     }
 
     @PostMapping
-    public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req) throws IOException {
+    public ResponseEntity<Void> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req) {
         String url = form.getFirst("url");
         UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
-        if (urlValidator.isValid(url)) {
+        if (url != null && urlValidator.isValid(url)) {
             String id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString();
             sharedData.put(id, url);
             URI location = URI.create(req.getRequestURL().append(id).toString());
@@ -477,7 +498,7 @@ public class Application {
     private StringRedisTemplate sharedData;
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<Void> redirectTo(@PathVariable String id) throws IOException {
+    public ResponseEntity<Void> redirectTo(@PathVariable String id) {
         String key = sharedData.opsForValue().get(id);
         if (key != null) {
             HttpHeaders responseHeaders = new HttpHeaders();
@@ -489,10 +510,10 @@ public class Application {
     }
 
     @PostMapping
-    public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req) throws IOException {
+    public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req) {
         String url = form.getFirst("url");
         UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
-        if (urlValidator.isValid(url)) {
+        if (url != null && urlValidator.isValid(url)) {
             String id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString();
             sharedData.opsForValue().set(id, url);
             URI location = URI.create(req.getRequestURL().append(id).toString());
@@ -534,10 +555,19 @@ $ redis-server /usr/local/etc/redis.conf
 ...
 ```
 
-Or if you have [Docker](https://www.docker.com/) installed:
+Or if you have [Docker](https://www.docker.com/) installed open a different terminal and then run:
 
 ```bash
-$ docker-compose -f src/main/docker/redis.yml up
+$ cat <<EOF > redis.yml
+version: '3'
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+EOF
+
+$ docker-compose -f redis.yml up
 ...
 Creating network "docker_default" with the default driver
 Creating docker_redis_1 ... 
@@ -550,14 +580,14 @@ redis_1  | 1:C 18 Sep 16:33:40.313 # Redis version=4.0.1, bits=64, commit=000000
 
 Now all your registered URI will stored in your Redis instance. You can run the tests again. 
 
-## Final remarks: Tests
+## Final remarks: Tests & Actuator endpoints
 
 In this repo you will find the final version of the code plus unit and integration tests. 
 Testing requires to add as dependencies after `compile 'org.springframework.boot:spring-boot-starter-data-redis'`
 
 ```groovy
 testCompile 'org.springframework.boot:spring-boot-starter-test'
-testCompile 'org.apache.httpcomponents:httpclient:4.5.3'
+testCompile 'org.apache.httpcomponents:httpclient'
 ```
 
 The classes for doing the tests are in the folder `src/main/test`.
@@ -645,7 +675,7 @@ package urlshortener;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
@@ -697,7 +727,7 @@ public void testCreation() throws Exception {
 }
 ```
 
-And the mehtod for the redirection (that also creates a redirection):
+And the method for the redirection (that also creates a redirection):
 
 ```java
 @Test
@@ -705,9 +735,21 @@ public void testRedirection() throws Exception {
     MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
     parts.add("url", HTTP_EXAMPLE_COM);
 	ResponseEntity<String> created = restTemplate.postForEntity("/", parts, String.class);
+	assertThat(created.getHeaders().getLocation(), is(notNullValue()));
 	String path = created.getHeaders().getLocation().getPath();
     ResponseEntity<String> response = restTemplate.getForEntity(path, String.class);
 	assertThat(response.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
 	assertThat(response.getHeaders().getLocation(), is(new URI(HTTP_EXAMPLE_COM)));
 }
 ```
+
+### Actuator endpoints
+
+[Actuator endpoints](https://spring.io/guides/gs/actuator-service/) let you monitor and interact with your application. 
+Just add:
+```groovy
+compile 'org.springframework.boot:spring-boot-starter-actuator'
+```
+Spring Boot includes a number of built-in endpoints and lets you add your own. 
+For example, the `http://localhost:8080/actuator/health` endpoint provides basic application health information.
+

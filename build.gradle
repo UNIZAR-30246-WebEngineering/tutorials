@@ -1,15 +1,18 @@
 buildscript {
+    ext {
+        springBootVersion = '2.0.5.RELEASE'
+    }
     repositories {
         mavenCentral()
-        maven { url "http://repo.spring.io/release" }
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
 
-// Instructions for all projects
+// Instructions for all projects (for standalone module development)
 allprojects {
+    // Enable support for IDE
    apply plugin: 'eclipse'
    apply plugin: 'idea'   
 }
@@ -17,19 +20,21 @@ allprojects {
 // Instructions for each sub project
 subprojects {
 
-    apply plugin: "org.springframework.boot"
-    apply plugin: "java"
+    group = 'es.unizar.inf.iw'
+    version = '2018'
 
+    // Enable Spring Boot helper tasks
+    apply plugin: 'org.springframework.boot'
+
+    // Enable the automatic management of some versions
+    apply plugin: 'io.spring.dependency-management'
+
+    // We are Java 8
+    apply plugin: 'java'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
     repositories {
 	  mavenCentral()
-	  maven { url 'http://repo.spring.io/release' }
-    }
+   }
 }
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.9'
-}
-
