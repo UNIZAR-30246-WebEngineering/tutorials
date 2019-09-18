@@ -783,6 +783,7 @@ public Docket api() {
         .paths(PathSelectors.any())
         .build();
 }
+```
 
 Now you can go to `http://localhost:8080/v2/api-docs` and obtain a JSON document that describes the API.
 
@@ -792,7 +793,7 @@ A human readable view of the documentation can be produced by adding the follwin
 implementation 'io.springfox:springfox-swagger-ui:2.9.2'
 ```
 
-A HTML version of the documentation ([Swagger UI](https://swagger.io/tools/swagger-ui/))is now available at `http://localhost:8080/swagger-ui.html`.
+A HTML version of the documentation ([Swagger UI](https://swagger.io/tools/swagger-ui/)) is now available at `http://localhost:8080/swagger-ui.html`.
 
 Each API operation (`POST /api`, `GET /api/{ip}`) can be tried out.
 Note that redirects (`GET /api/{ip}`) produces a [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) error
