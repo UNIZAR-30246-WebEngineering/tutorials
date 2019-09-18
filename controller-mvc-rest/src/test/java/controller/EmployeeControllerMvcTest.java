@@ -32,16 +32,6 @@ public class EmployeeControllerMvcTest {
     }
 
     @Test
-    public void getEmployeeInXML() {
-        ResponseEntity<Employee> employee = this.restTemplate.getForEntity(
-                "/mvc/employees/{name}.xml", Employee.class, "Phil");
-
-        assertThat(employee.getStatusCode(), is(HttpStatus.OK));
-        assertThat(employee.getHeaders().getContentType(), is(MediaType.APPLICATION_XML));
-        assertThat(employee.getBody().getName(), is("Phil"));
-    }
-
-    @Test
     public void getEmployeeInHTML() {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.ACCEPT, MediaType.TEXT_HTML_VALUE);
