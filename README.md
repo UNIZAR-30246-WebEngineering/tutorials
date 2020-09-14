@@ -7,6 +7,7 @@ If your system has Gradle 2.9 or later use `gradle check` to run the tests, othe
 ## Introduction
 
 * [A really short URL shortener in Java](urlshortener)
+* [A really short URL shortener in Kotlin](urlshortener-kotlin)
 * [URL Shortener in Docker](urlshortener-docker)
 
 ## Web Technologies
