@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/UNIZAR-30246-WebEngineering/tutorials.svg)](https://travis-ci.org/UNIZAR-30246-WebEngineering/tutorials)
+[![Build Status](https://travis-ci.com/UNIZAR-30246-WebEngineering/tutorials.svg)](https://travis-ci.com/UNIZAR-30246-WebEngineering/tutorials)
 
 # Tutorials
 
