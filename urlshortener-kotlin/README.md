@@ -226,57 +226,55 @@ Location: http:/www.unizar.es/
 
 Edit the class `App` and rewrite the code as follows:
 
-```Java
-package urlshortener;
+```kotlin
+package urlshortener
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import com.google.common.hash.Hashing
+import org.apache.commons.validator.routines.UrlValidator
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.runApplication
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Controller
+import org.springframework.util.MultiValueMap
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import javax.servlet.http.HttpServletRequest
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 @SpringBootApplication
+class App
+
+fun main(args: Array<String>) {
+    runApplication<App>(*args)
+}
+
 @Controller
-public class App {
-    public static void main(String[] args) {
-        SpringApplication.run(App.class, args);
-    }
+class RedirectController {
 
-    private Map<String, String> sharedData = new HashMap<>();
+    private val sharedData = mutableMapOf<String, String>()
 
-    @GetMapping(value = "/{id}")
-    public ResponseEntity<Void> redirectTo(@PathVariable String id) {
-        String key = sharedData.get(id);
-        if (key != null) {
-            HttpHeaders responseHeaders = new HttpHeaders();
-            responseHeaders.setLocation(URI.create(key));
-            return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
+    @GetMapping("/{id}")
+    fun redirectTo(@PathVariable id: String) =
+        sharedData[id]?.let {
+            ResponseEntity<Void>(HttpHeaders().apply {
+                location = URI.create(it)
+            }, HttpStatus.TEMPORARY_REDIRECT)
+        } ?: ResponseEntity(HttpStatus.NOT_FOUND)
 
     @PostMapping
-    public ResponseEntity<String> shortener(@RequestParam MultiValueMap<String, String> form, HttpServletRequest req)  {
-        String url = form.getFirst("url");
-        String id = "" + url.hashCode();
-        sharedData.put(id, url);
-        URI location = URI.create(req.getRequestURL().append(id).toString());
-        HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.setLocation(location);
-        return new ResponseEntity<>(responseHeaders, HttpStatus.CREATED);
+    fun shortener(@RequestParam form: MultiValueMap<String?, String?>, req: HttpServletRequest): ResponseEntity<Void> {
+        val url = form.getFirst("url") ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val id = url.hashCode().toString()
+        sharedData[id] = url
+        return ResponseEntity(HttpHeaders().apply { 
+          location = URI.create(req.requestURL.append(id).toString()) 
+         }, HttpStatus.CREATED)
     }
 }
 ```
