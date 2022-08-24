@@ -42,8 +42,14 @@ Select implementation language:
   2: Groovy
   3: Java
   4: Kotlin
-  5: Swift
+  5: Scala
+  6: Swift
 Enter selection (default: Java) [1..5] 4
+
+Split functionality across multiple subprojects?:
+  1: no - only one application project
+  2: yes - application and library projects
+Enter selection (default: no - only one application project) [1..2] 1
 
 Select build script DSL:
   1: Groovy
@@ -62,7 +68,7 @@ gradle run
 
 ## Transform into a Spring Boot Web application
 
-Update `build.gradle.kts` by replacing in the `plugins` block by:
+Update `app/build.gradle.kts` by replacing in the `plugins` block by:
 
 ```kotlin
 plugins {
@@ -88,7 +94,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 }
 ```
 
-Edit the class `App` at `src/main/kotlin/urlshortener/App.kt` and rewrite the code as follows:
+Edit the class `App` at `app/src/main/kotlin/urlshortener/App.kt` and rewrite the code as follows:
 
 ```kotlin
 package urlshortener
@@ -104,10 +110,10 @@ fun main(args: Array<String>) {
 }
 ```
 
-Remove the file  `src/test/kotlin/urlshortener/AppTest.kt`.
+Remove the file  `app/src/test/kotlin/urlshortener/AppTest.kt`.
 
 ```bash
-rm src/test/kotlin/urlshortener/AppTest.kt
+rm app/src/test/kotlin/urlshortener/AppTest.kt
 ```
 
 And then run:
@@ -130,7 +136,7 @@ Accept: */*
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Host: localhost:8080
-User-Agent: HTTPie/2.2.0
+User-Agent: HTTPie/3.2.1
 
 ```
 
@@ -140,7 +146,7 @@ And this the server response (our `App`):
 HTTP/1.1 404 
 Connection: keep-alive
 Content-Type: application/json
-Date: Mon, 14 Sep 2020 14:41:35 GMT
+Date: Wed, 24 Aug 2022 16:34:14 GMT
 Keep-Alive: timeout=60
 Transfer-Encoding: chunked
 Vary: Origin
@@ -152,7 +158,7 @@ Vary: Access-Control-Request-Headers
     "message": "",
     "path": "/",
     "status": 404,
-    "timestamp": "2020-09-14T14:41:35.168+00:00"
+    "timestamp": "2022-08-24T16:34:14.540+00:00"
 }
 ```
 
@@ -206,7 +212,7 @@ Accept: */*
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Host: localhost:8080
-User-Agent: HTTPie/2.2.0
+User-Agent: HTTPie/3.2.1
 
 ```
 
@@ -216,7 +222,7 @@ This is the HTTP response:
 HTTP/1.1 302 
 Connection: keep-alive
 Content-Length: 0
-Date: Mon, 14 Sep 2020 14:44:32 GMT
+Date: Wed, 24 Aug 2022 16:36:57 GMT
 Keep-Alive: timeout=60
 Location: http:/www.unizar.es/
 
@@ -229,8 +235,6 @@ Edit the class `App` and rewrite the code as follows:
 ```kotlin
 package urlshortener
 
-import com.google.common.hash.Hashing
-import org.apache.commons.validator.routines.UrlValidator
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.http.HttpHeaders
@@ -279,7 +283,8 @@ class RedirectController {
 }
 ```
 
-Run it now and you have a working shortener endpoint at port 8080. Let's test it:
+Run it now, and you will have a working shortener endpoint at port 8080. 
+Let's test it:
 
 ```bash
 http -v --form POST localhost:8080 url=http://www.unizar.es/
@@ -295,7 +300,7 @@ Connection: keep-alive
 Content-Length: 33
 Content-Type: application/x-www-form-urlencoded; charset=utf-8
 Host: localhost:8080
-User-Agent: HTTPie/2.2.0
+User-Agent: HTTPie/3.2.1
 
 url=http%3A%2F%2Fwww.unizar.es%2F
 ```
@@ -306,7 +311,7 @@ This is the HTTP response.
 HTTP/1.1 201 
 Connection: keep-alive
 Content-Length: 0
-Date: Mon, 14 Sep 2020 14:57:44 GMT
+Date: Wed, 24 Aug 2022 16:40:34 GMT
 Keep-Alive: timeout=60
 Location: http://localhost:8080/2108188503
 
@@ -326,7 +331,7 @@ Accept: */*
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Host: localhost:8080
-User-Agent: HTTPie/2.2.0
+User-Agent: HTTPie/3.2.1
 
 ```
 
@@ -336,7 +341,7 @@ This is the HTTP response.
 HTTP/1.1 307 
 Connection: keep-alive
 Content-Length: 0
-Date: Mon, 14 Sep 2020 14:58:22 GMT
+Date: Wed, 24 Aug 2022 16:41:17 GMT
 Keep-Alive: timeout=60
 Location: http://www.unizar.es/
 
@@ -356,7 +361,7 @@ Accept: */*
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Host: localhost:8080
-User-Agent: HTTPie/2.2.0
+User-Agent: HTTPie/3.2.1
 
 ```
 
@@ -366,7 +371,7 @@ This is the HTTP response.
 HTTP/1.1 404 
 Connection: keep-alive
 Content-Length: 0
-Date: Mon, 14 Sep 2020 14:58:52 GMT
+Date: Wed, 24 Aug 2022 16:41:33 GMT
 Keep-Alive: timeout=60
 
 ```
@@ -376,8 +381,9 @@ Keep-Alive: timeout=60
 Add the following dependencies to `build.gradle.kts` in the `dependencies` block:
 
 ```kotlin
-    implementation("commons-validator:commons-validator:1.6")
-    implementation("com.google.guava:guava:23.0")
+    implementation("commons-validator:commons-validator:1.7")
+    // Depending on the version of Gradle, guava may be in the build file
+    implementation("com.google.guava:guava:31.1-jre") 
 ```
 
 Note that the version is not managed in these libraries.
@@ -434,7 +440,7 @@ class RedirectController {
         return when {
             url == null -> ResponseEntity(HttpStatus.BAD_REQUEST)
             urlValidator.isValid(url) -> {
-                val id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString()
+                val id = Hashing.murmur3_32_fixed().hashString(url, StandardCharsets.UTF_8).toString()
                 sharedData[id] = url
                 ResponseEntity(HttpHeaders().apply {
                     location = URI.create(req.requestURL.append(id).toString())
@@ -462,7 +468,7 @@ Connection: keep-alive
 Content-Length: 32
 Content-Type: application/x-www-form-urlencoded; charset=utf-8
 Host: localhost:8080
-User-Agent: HTTPie/2.2.0
+User-Agent: HTTPie/3.2.1
 
 url=ftp%3A%2F%2Fwww.unizar.es%2F
 
@@ -474,7 +480,7 @@ This is the HTTP response.
 HTTP/1.1 400 
 Connection: close
 Content-Length: 0
-Date: Mon, 14 Sep 2020 15:05:05 GMT
+Date: Wed, 24 Aug 2022 16:45:19 GMT
 
 ```
 
@@ -535,7 +541,7 @@ class RedirectController(
         val urlValidator = UrlValidator(arrayOf("http", "https"))
         return when {
             urlValidator.isValid(url) -> {
-                val id = Hashing.murmur3_32().hashString(url, StandardCharsets.UTF_8).toString()
+                val id = Hashing.murmur3_32_fixed().hashString(url, StandardCharsets.UTF_8).toString()
                 sharedData.opsForValue()[id] = url
                 ResponseEntity(HttpHeaders().apply {
                     location = URI.create(req.requestURL.append("/").append(id).toString())
@@ -547,7 +553,7 @@ class RedirectController(
 }
 ```
 
-Note that we have moved the redirect endpoint to `/api/{id}` and `/api` and we have explicited the parameter that the shortener consumes.
+Note that we have moved the redirect endpoint to `/api/{id}` and `/api` and we had made explicit the parameter that the shortener consumes.
 
 Open a different terminal and then run:
 
@@ -571,7 +577,7 @@ red
 ...
 ```
 
-Then run again the server. Now all your registered URI will stored in your Redis instance.
+Then run again the server. Now all your registered URI will be stored in your Redis instance.
 
 Run the `urlshortener` and register a redirection.
 
@@ -595,13 +601,15 @@ Testing requires to add as dependencies.
 ```kotlin
 testImplementation("org.springframework.boot:spring-boot-starter-test")
 testImplementation("org.apache.httpcomponents:httpclient")
+// For integration tests
+testImplementation("com.redis.testcontainers:testcontainers-redis-junit:1.6.2")
 ```
 
-The classes for doing the tests are in the folder `src/main/test`.
+The classes for doing the tests are in the folder `app/src/main/test`.
 
 ### Unit Tests
 
-For example `urlshortener.UnitTest` is able to test the `shortener` method by mocking the web server and the Redis storage.
+For example `UnitTest` is able to test the `shortener` method by mocking the web server and the Redis storage.
 The class that contains the test is as follows:
 
 ```kotlin
@@ -637,9 +645,10 @@ class UnitTest {
     private lateinit var mvc: MockMvc
 
     companion object {
-        const val HTTP_EXAMPLE_COM = "http://example.com/"
-        const val HASH = "f684a3c4"
-        const val HASH_HTTP_EXAMPLE_COM = "http://localhost/api/$HASH"
+        private const val FTP_EXAMPLE_COM = "ftp://example.com/"
+        private const val HTTP_EXAMPLE_COM = "https://example.com/"
+        private const val HASH = "83f94a17"
+        private const val HASH_HTTP_EXAMPLE_COM = "http://localhost/api/$HASH"
     }
 }
 ```
@@ -648,7 +657,7 @@ Inside we can add the unit test for the creation:
 
 ```kotlin
 @Test
-fun testCreation() {
+fun `should return 201 and a location in a valid redirection`() {
     given(stringRedisTemplate.opsForValue()).willReturn(valueOperations)
     mvc.perform(
         post("/api")
@@ -664,7 +673,7 @@ And for the redirection:
 
 ```koltin
 @Test
-fun testRedirection() {
+fun `should return 307 in a valid redirection`() {
     given(stringRedisTemplate.opsForValue()).willReturn(valueOperations)
     given(valueOperations[HASH]).willReturn(HTTP_EXAMPLE_COM)
     mvc.perform(
@@ -677,31 +686,14 @@ fun testRedirection() {
 
 ### Integration Tests
 
-Meanwhile in  `urlshortener.IntegrationTest` it is a test that do the same with a running URL shortener and a Redis instance.
+Meanwhile, `IntegrationTest` it is a test that do the same with a running URL shortener and a Redis instance.
 
-The base code is slightly different:
+The base code is slightly different. 
+It includes the use of [Testcontainers](https://www.testcontainers.org/).
+It is a Java library that supports JUnit tests, providing lightweight, throwaway instances of common databases, Selenium web browsers, or anything else that can run in a Docker container.
 
 ```kotlin
-package urlshortener
-
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.core.Is.`is`
-import org.hamcrest.core.IsNull.notNullValue
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.web.server.LocalServerPort
-import org.springframework.http.HttpStatus
-import org.springframework.test.context.junit4.SpringRunner
-import org.springframework.util.LinkedMultiValueMap
-import org.springframework.web.util.UriComponentsBuilder
-import java.net.URI
-import java.util.*
-
-
+@Testcontainers
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class IntegrationTest {
@@ -712,9 +704,28 @@ class IntegrationTest {
     private var port: Int = 0
 
     companion object {
-        const val HTTP_EXAMPLE_COM = "http://example.com/"
-        const val HASH_HTTP_EXAMPLE_COM = "f684a3c4"
+        private const val FTP_EXAMPLE_COM = "ftp://example.com/"
+        private const val HTTP_EXAMPLE_COM = "https://example.com/"
+        private const val HASH_HTTP_EXAMPLE_COM = "83f94a17"
+        private const val OTHER_VALUE = "f684a3c5"
+        private const val REDIS_DEFAULT_PORT = 6379
         val LOCATION = UriComponentsBuilder.fromUriString("http://localhost:{port}/api/{hash}").build()
+
+        @Container
+        private val redisContainer = GenericContainer<Nothing>("redis:alpine").apply {
+            withExposedPorts(REDIS_DEFAULT_PORT)
+        }
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun properties(registry: DynamicPropertyRegistry) {
+            redisContainer.start()
+            registry.add("spring.redis.host") { redisContainer.host }
+            registry.add("spring.redis.port") {
+                println(redisContainer.getMappedPort(REDIS_DEFAULT_PORT))
+                redisContainer.getMappedPort(REDIS_DEFAULT_PORT)
+            }
+        }
     }
 
 }
@@ -724,14 +735,15 @@ Inside we can find the method for the integration test for the creation:
 
 ```kotlin
 @Test
-fun testCreation() {
+fun `should return 201 and a location in a valid redirection`() {
     val parts = LinkedMultiValueMap<Any, Any>()
     parts.add("url", HTTP_EXAMPLE_COM)
     val response = restTemplate.postForEntity("/api", parts, String::class.java)
     assertThat(response.statusCode, `is`(HttpStatus.CREATED))
-    val components: MutableMap<String, Any> = HashMap()
-    components["port"] = port
-    components["hash"] = HASH_HTTP_EXAMPLE_COM
+    val components = hashMapOf(
+        "port" to port,
+        "hash" to HASH_HTTP_EXAMPLE_COM
+    )
     assertThat(response.headers.location, `is`(LOCATION.expand(components).toUri()))
 }
 ```
@@ -740,7 +752,7 @@ And the method for the redirection (that also creates a redirection):
 
 ```kotlin
 @Test
-fun testRedirection() {
+fun `should return 307 in a valid redirection`() {
     val parts = LinkedMultiValueMap<Any, Any>()
     parts.add("url", HTTP_EXAMPLE_COM)
     val created = restTemplate.postForEntity("/api", parts, String::class.java)
@@ -768,7 +780,7 @@ For example, the `http://localhost:8080/actuator/health` endpoint provides basic
 HTTP/1.1 200
 Connection: keep-alive
 Content-Type: application/vnd.spring-boot.actuator.v3+json
-Date: Mon, 14 Sep 2020 15:33:56 GMT
+Date: Wed, 24 Aug 2022 16:56:11 GMT
 Keep-Alive: timeout=60
 Transfer-Encoding: chunked
 
@@ -780,14 +792,18 @@ Transfer-Encoding: chunked
 ### Documentation
 
 [Swagger](https://swagger.io/) can create automatically a readable documentation of the API.
-Just add the following dependency.
+Add the following dependency.
 
-```groovy
-implementation("io.springfox:springfox-boot-starter:3.0.0")
+```kotlin
+implementation("org.springdoc:springdoc-openapi-ui:1.6.11")
+implementation("org.springdoc:springdoc-openapi-kotlin:1.6.11")
 ```
-Now you can go to `http://localhost:8080/v2/api-docs` and obtain a JSON document that describes the API.
 
-A HTML version of the documentation ([Swagger UI](https://swagger.io/tools/swagger-ui/)) is now available at `http://localhost:8080/swagger-ui/index.html`.
+And replace `@Controller` by `@RestController` in `RedirectController`.
+
+Now you can go to `http://localhost:8080/v3/api-docs` and obtain a JSON document that describes your API.
+
+An HTML version of the documentation ([Swagger UI](https://swagger.io/tools/swagger-ui/)) is now available at `http://localhost:8080/swagger-ui/index.html`.
 
 Each API operation (`POST /api`, `GET /api/{ip}`) can be tried out.
 Note that redirects (`GET /api/{ip}`) produces a [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) error

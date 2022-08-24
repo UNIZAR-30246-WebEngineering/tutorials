@@ -5,16 +5,15 @@
  */
 
 plugins {
-    kotlin("jvm") version "1.3.72"
-    kotlin("plugin.spring") version "1.3.72"
-    id("org.springframework.boot") version "2.3.3.RELEASE"
-    id("io.spring.dependency-management") version "1.0.10.RELEASE"
+    kotlin("jvm") version "1.7.0"
+    kotlin("plugin.spring") version "1.7.0"
+    id("org.springframework.boot") version "2.7.3"
+    id("io.spring.dependency-management") version "1.0.13.RELEASE"
 }
 
 repositories {
-    // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -25,12 +24,14 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
-
-    implementation("commons-validator:commons-validator:1.6")
-    implementation("com.google.guava:guava:23.0")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("io.springfox:springfox-boot-starter:3.0.0")
+
+    implementation("commons-validator:commons-validator:1.7")
+    implementation("com.google.guava:guava:31.1-jre")
+
+    implementation("org.springdoc:springdoc-openapi-ui:1.6.11")
+    implementation("org.springdoc:springdoc-openapi-kotlin:1.6.11")
 
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -38,7 +39,9 @@ dependencies {
     // Use the Kotlin JUnit integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+
     testImplementation("org.apache.httpcomponents:httpclient")
+    testImplementation("com.redis.testcontainers:testcontainers-redis-junit:1.6.2")
 
 }
 

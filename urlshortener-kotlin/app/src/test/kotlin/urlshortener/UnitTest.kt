@@ -32,13 +32,14 @@ class UnitTest {
     private lateinit var mvc: MockMvc
 
     companion object {
-        const val HTTP_EXAMPLE_COM = "http://example.com/"
-        const val HASH = "f684a3c4"
-        const val HASH_HTTP_EXAMPLE_COM = "http://localhost/api/$HASH"
+        private const val FTP_EXAMPLE_COM = "ftp://example.com/"
+        private const val HTTP_EXAMPLE_COM = "https://example.com/"
+        private const val HASH = "83f94a17"
+        private const val HASH_HTTP_EXAMPLE_COM = "http://localhost/api/$HASH"
     }
 
     @Test
-    fun testCreation() {
+    fun `should return 201 and a location in a valid redirection`() {
         given(stringRedisTemplate.opsForValue()).willReturn(valueOperations)
         mvc.perform(
             post("/api")
@@ -50,7 +51,17 @@ class UnitTest {
     }
 
     @Test
-    fun testRedirection() {
+    fun `should return 400 if the redirection cannot be created`() {
+        mvc.perform(
+            post("/api")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("url", FTP_EXAMPLE_COM)
+        )
+            .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `should return 307 in a valid redirection`() {
         given(stringRedisTemplate.opsForValue()).willReturn(valueOperations)
         given(valueOperations[HASH]).willReturn(HTTP_EXAMPLE_COM)
         mvc.perform(
@@ -58,5 +69,15 @@ class UnitTest {
         )
             .andExpect(status().isTemporaryRedirect)
             .andExpect(header().string("Location", `is`(HTTP_EXAMPLE_COM)))
+    }
+
+    @Test
+    fun `should return 404 in an invalid redirection`() {
+        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations)
+        given(valueOperations[HASH]).willReturn(null)
+        mvc.perform(
+            get("/api/$HASH")
+        )
+            .andExpect(status().isNotFound)
     }
 }
