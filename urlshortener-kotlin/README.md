@@ -4,18 +4,20 @@ The goal of this tutorial is the creation of a powerful URL shortener with a few
 
 ## What is a URL shortener
 
-A URL shortener is a web service that makes a long URL short, easy to remember and to share. The behaviour of the application is as follows:
+A URL shortener is a web service that makes a long URL short, easy to remember and to share. The behaviour of the
+application is as follows:
 
 ![URL shortener flow](https://github.com/UNIZAR-30246-WebEngineering/tutorials/blob/master/urlshortener-kotlin/img/flow.png)
 
-Rembember, the focus of this course is Web Engineering, therefore we will focus on the red interactions in the above figure.
+Remember, the focus of this course is Web Engineering, therefore we will focus on the red interactions in the above
+figure.
 
 ## Prerequisites
 
 Prerequisites:
 
-- [Java SDK v1.8](http://www.java.com/en/) or higher.
-- [Gradle Build Tool 6.0](http://www.gradle.org/) or higher.
+- [Java 17](http://www.java.com/en/) or higher.
+- [Gradle Build Tool 8.0](http://www.gradle.org/) or higher.
 - [Redis 3.0](http://redis.io/download) or higher.
 - [HTTPie](https://httpie.org/) or similar HTTP client for testing.
 - [Visual Studio Code](https://code.visualstudio.com/) or similar as editor.
@@ -46,18 +48,17 @@ Select implementation language:
   6: Swift
 Enter selection (default: Java) [1..5] 4
 
-Split functionality across multiple subprojects?:
-  1: no - only one application project
-  2: yes - application and library projects
-Enter selection (default: no - only one application project) [1..2] 1
+Generate multiple subprojects for application? (default: no) [yes, no] no
 
+Generate multiple subprojects for application? (default: no) [yes, no] no
 Select build script DSL:
-  1: Groovy
-  2: Kotlin
-Enter selection (default: Groovy) [1..2] 2
+  1: Kotlin
+  2: Groovy
+Enter selection (default: Kotlin) [1..2] 1
 
-Project name (default: urlshortener):
-Source package (default: urlshortener):
+Project name (default: urlshortener): urlshortener
+Source package (default: urlshortener): urlshortener
+Enter target version of Java (min. 7) (default: 20): 17
 ```
 
 And then run:
@@ -68,29 +69,29 @@ gradle run
 
 ## Transform into a Spring Boot Web application
 
-Update `app/build.gradle.kts` by replacing in the `plugins` block by:
+Update `app/build.gradle.kts` so it looks like:
 
 ```kotlin
 plugins {
-    kotlin("jvm") version "1.3.72"
-    kotlin("plugin.spring") version "1.3.72"
-    id("org.springframework.boot") version "2.3.3.RELEASE"
-    id("io.spring.dependency-management") version "1.0.10.RELEASE"
+    kotlin("jvm") version "1.9.10"
+    kotlin("plugin.spring") version "1.9.10"
+    id("org.springframework.boot") version "3.1.3"
 }
 ```
+
 in the `dependencies` block add:
 
 ```kotlin
+implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 implementation("org.springframework.boot:spring-boot-starter-web")
 ```
-remove the `application` block, and add at the end
+
+and remove the `application` block
 
 ```kotlin
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "1.8"
-    }
+application {
+    // Define the main class for the application.
+    mainClass.set("urlshortener.AppKt")
 }
 ```
 
@@ -106,7 +107,7 @@ import org.springframework.boot.runApplication
 class App
 
 fun main(args: Array<String>) {
-    runApplication<App>(*args)
+    runApplication<App>(args = args)
 }
 ```
 
@@ -146,7 +147,7 @@ And this the server response (our `App`):
 HTTP/1.1 404 
 Connection: keep-alive
 Content-Type: application/json
-Date: Wed, 24 Aug 2022 16:34:14 GMT
+Date: Wed, 06 Sep 2023 17:49:31 GMT
 Keep-Alive: timeout=60
 Transfer-Encoding: chunked
 Vary: Origin
@@ -158,7 +159,7 @@ Vary: Access-Control-Request-Headers
     "message": "",
     "path": "/",
     "status": 404,
-    "timestamp": "2022-08-24T16:34:14.540+00:00"
+    "timestamp": "2023-09-06T17:49:31.657+00:00"
 }
 ```
 
@@ -176,14 +177,14 @@ import org.springframework.boot.runApplication
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.servlet.HandlerMapping
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 
 @SpringBootApplication
 class App
 
 fun main(args: Array<String>) {
-    runApplication<App>(*args)
+    runApplication<App>(args = args)
 }
 
 @Controller
@@ -222,7 +223,7 @@ This is the HTTP response:
 HTTP/1.1 302 
 Connection: keep-alive
 Content-Length: 0
-Date: Wed, 24 Aug 2022 16:36:57 GMT
+Date: Wed, 06 Sep 2023 17:50:50 GMT
 Keep-Alive: timeout=60
 Location: http:/www.unizar.es/
 
@@ -248,14 +249,14 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 
 @SpringBootApplication
 class App
 
 fun main(args: Array<String>) {
-    runApplication<App>(*args)
+    runApplication<App>(args = args)
 }
 
 @Controller
@@ -266,13 +267,13 @@ class RedirectController {
     @GetMapping("/{id}")
     fun redirectTo(@PathVariable id: String) =
         sharedData[id]?.let {
-            ResponseEntity<Void>(HttpHeaders().apply {
+            ResponseEntity<Unit>(HttpHeaders().apply {
                 location = URI.create(it)
             }, HttpStatus.TEMPORARY_REDIRECT)
         } ?: ResponseEntity(HttpStatus.NOT_FOUND)
 
     @PostMapping
-    fun shortener(@RequestParam form: MultiValueMap<String?, String?>, req: HttpServletRequest): ResponseEntity<Void> {
+    fun shortener(@RequestParam form: MultiValueMap<String?, String?>, req: HttpServletRequest): ResponseEntity<Unit> {
         val url = form.getFirst("url") ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val id = url.hashCode().toString()
         sharedData[id] = url
@@ -283,7 +284,7 @@ class RedirectController {
 }
 ```
 
-Run it now, and you will have a working shortener endpoint at port 8080. 
+Run it now, and you will have a working shortener endpoint at port 8080.
 Let's test it:
 
 ```bash
@@ -311,7 +312,7 @@ This is the HTTP response.
 HTTP/1.1 201 
 Connection: keep-alive
 Content-Length: 0
-Date: Wed, 24 Aug 2022 16:40:34 GMT
+Date: Wed, 06 Sep 2023 17:52:29 GMT
 Keep-Alive: timeout=60
 Location: http://localhost:8080/2108188503
 
@@ -341,7 +342,7 @@ This is the HTTP response.
 HTTP/1.1 307 
 Connection: keep-alive
 Content-Length: 0
-Date: Wed, 24 Aug 2022 16:41:17 GMT
+Date: Wed, 06 Sep 2023 17:52:50 GMT
 Keep-Alive: timeout=60
 Location: http://www.unizar.es/
 
@@ -371,7 +372,7 @@ This is the HTTP response.
 HTTP/1.1 404 
 Connection: keep-alive
 Content-Length: 0
-Date: Wed, 24 Aug 2022 16:41:33 GMT
+Date: Wed, 06 Sep 2023 17:53:12 GMT
 Keep-Alive: timeout=60
 
 ```
@@ -382,8 +383,7 @@ Add the following dependencies to `build.gradle.kts` in the `dependencies` block
 
 ```kotlin
     implementation("commons-validator:commons-validator:1.7")
-    // Depending on the version of Gradle, guava may be in the build file
-    implementation("com.google.guava:guava:31.1-jre") 
+    implementation("com.google.guava:guava:32.1.1-jre") // Only if it is not already present
 ```
 
 Note that the version is not managed in these libraries.
@@ -410,7 +410,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 
 @SpringBootApplication
@@ -428,13 +428,13 @@ class RedirectController {
     @GetMapping("/{id}")
     fun redirectTo(@PathVariable id: String) =
         sharedData[id]?.let {
-            ResponseEntity<Void>(HttpHeaders().apply {
+            ResponseEntity<Unit>(HttpHeaders().apply {
                 location = URI.create(it)
             }, HttpStatus.TEMPORARY_REDIRECT)
         } ?: ResponseEntity(HttpStatus.NOT_FOUND)
 
     @PostMapping
-    fun shortener(@RequestParam form: MultiValueMap<String?, String?>, req: HttpServletRequest): ResponseEntity<Void> {
+    fun shortener(@RequestParam form: MultiValueMap<String?, String?>, req: HttpServletRequest): ResponseEntity<Unit> {
         val url = form.getFirst("url")
         val urlValidator = UrlValidator(arrayOf("http", "https"))
         return when {
@@ -480,7 +480,7 @@ This is the HTTP response.
 HTTP/1.1 400 
 Connection: close
 Content-Length: 0
-Date: Wed, 24 Aug 2022 16:45:19 GMT
+Date: Wed, 06 Sep 2023 17:57:34 GMT
 
 ```
 
@@ -513,7 +513,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 
 @SpringBootApplication
@@ -531,13 +531,13 @@ class RedirectController(
     @GetMapping("/api/{id}")
     fun redirectTo(@PathVariable id: String) =
         sharedData.opsForValue()[id]?.let {
-            ResponseEntity<Void>(HttpHeaders().apply {
+            ResponseEntity<Unit>(HttpHeaders().apply {
                 location = URI.create(it)
             }, HttpStatus.TEMPORARY_REDIRECT)
         } ?: ResponseEntity(HttpStatus.NOT_FOUND)
 
     @PostMapping("/api", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
-    fun shortener(@RequestParam url: String, req: HttpServletRequest): ResponseEntity<Void> {
+    fun shortener(@RequestParam url: String, req: HttpServletRequest): ResponseEntity<Unit> {
         val urlValidator = UrlValidator(arrayOf("http", "https"))
         return when {
             urlValidator.isValid(url) -> {
@@ -553,7 +553,8 @@ class RedirectController(
 }
 ```
 
-Note that we have moved the redirect endpoint to `/api/{id}` and `/api` and we had made explicit the parameter that the shortener consumes.
+Note that we have moved the redirect endpoint to `/api/{id}` and `/api` and we had made explicit the parameter that the
+shortener consumes.
 
 Open a different terminal and then run:
 
@@ -570,10 +571,9 @@ EOF
 $ docker-compose -f redis.yml up
 ...
 Creating urlshortener_redis_1 ... done
-Attaching to urlshortener_redis_1
-redis_1  | 1:C 18 Sep 2019 14:44:48.313 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
-redis_1  | 1:C 18 Sep 2019 14:44:48.313 # Redis version=5.0.5, bits=64, commit=00000000, modified=0, pid=1, just started
-red
+Attaching to urlshortener-redis-1
+urlshortener-redis-1  | 1:C 06 Sep 2023 18:00:24.142 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+urlshortener-redis-1  | 1:C 06 Sep 2023 18:00:24.142 * Redis version=7.2.0, bits=64, commit=00000000, modified=0, pid=1, just started
 ...
 ```
 
@@ -610,14 +610,13 @@ The classes for doing the tests are in the folder `app/src/main/test`.
 ### Unit Tests
 
 For example `UnitTest` is able to test the `shortener` method by mocking the web server and the Redis storage.
-The class that contains the test is as follows:
+Create a `UnitTest.kt` file:
 
 ```kotlin
 package urlshortener
 
 import org.hamcrest.Matchers.`is`
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -625,14 +624,12 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.core.ValueOperations
 import org.springframework.http.MediaType
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-@RunWith(SpringRunner::class)
 @WebMvcTest(RedirectController::class)
 class UnitTest {
     @MockBean
@@ -645,7 +642,6 @@ class UnitTest {
     private lateinit var mvc: MockMvc
 
     companion object {
-        private const val FTP_EXAMPLE_COM = "ftp://example.com/"
         private const val HTTP_EXAMPLE_COM = "https://example.com/"
         private const val HASH = "83f94a17"
         private const val HASH_HTTP_EXAMPLE_COM = "http://localhost/api/$HASH"
@@ -686,15 +682,34 @@ fun `should return 307 in a valid redirection`() {
 
 ### Integration Tests
 
-Meanwhile, `IntegrationTest` it is a test that do the same with a running URL shortener and a Redis instance.
+Meanwhile, `IntegrationTest.kt` it is a test that do the same with a running URL shortener and a Redis instance.
 
-The base code is slightly different. 
+The base code is slightly different.
 It includes the use of [Testcontainers](https://www.testcontainers.org/).
-It is a Java library that supports JUnit tests, providing lightweight, throwaway instances of common databases, Selenium web browsers, or anything else that can run in a Docker container.
+It is a Java library that supports JUnit tests, providing lightweight, throwaway instances of common databases, Selenium
+web browsers, or anything else that can run in a Docker container.
 
 ```kotlin
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
+import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.http.HttpStatus
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
+import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.util.UriComponentsBuilder
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
+import java.net.URI
+
 @Testcontainers
-@RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class IntegrationTest {
     @Autowired
@@ -704,12 +719,10 @@ class IntegrationTest {
     private var port: Int = 0
 
     companion object {
-        private const val FTP_EXAMPLE_COM = "ftp://example.com/"
         private const val HTTP_EXAMPLE_COM = "https://example.com/"
         private const val HASH_HTTP_EXAMPLE_COM = "83f94a17"
-        private const val OTHER_VALUE = "f684a3c5"
         private const val REDIS_DEFAULT_PORT = 6379
-        val LOCATION = UriComponentsBuilder.fromUriString("http://localhost:{port}/api/{hash}").build()
+        val LOCATION: UriComponents = UriComponentsBuilder.fromUriString("http://localhost:{port}/api/{hash}").build()
 
         @Container
         private val redisContainer = GenericContainer<Nothing>("redis:alpine").apply {
@@ -721,13 +734,9 @@ class IntegrationTest {
         fun properties(registry: DynamicPropertyRegistry) {
             redisContainer.start()
             registry.add("spring.redis.host") { redisContainer.host }
-            registry.add("spring.redis.port") {
-                println(redisContainer.getMappedPort(REDIS_DEFAULT_PORT))
-                redisContainer.getMappedPort(REDIS_DEFAULT_PORT)
-            }
+            registry.add("spring.redis.port") { redisContainer.getMappedPort(REDIS_DEFAULT_PORT) }
         }
     }
-
 }
 ```
 
@@ -774,7 +783,13 @@ implementation("org.springframework.boot:spring-boot-starter-actuator")
 ```
 
 Spring Boot includes a number of built-in endpoints and lets you add your own.
-For example, the `http://localhost:8080/actuator/health` endpoint provides basic application health information.
+For example, the `http://localhost:8080/actuator/health` endpoint 
+
+```bash
+http -v localhost:8080/actuator/health
+```
+
+Provides basic application health information.
 
 ```http
 HTTP/1.1 200
@@ -789,22 +804,5 @@ Transfer-Encoding: chunked
 }
 ```
 
-### Documentation
-
-[Swagger](https://swagger.io/) can create automatically a readable documentation of the API.
-Add the following dependency.
-
-```kotlin
-implementation("org.springdoc:springdoc-openapi-ui:1.6.11")
-implementation("org.springdoc:springdoc-openapi-kotlin:1.6.11")
-```
-
-And replace `@Controller` by `@RestController` in `RedirectController`.
-
-Now you can go to `http://localhost:8080/v3/api-docs` and obtain a JSON document that describes your API.
-
-An HTML version of the documentation ([Swagger UI](https://swagger.io/tools/swagger-ui/)) is now available at `http://localhost:8080/swagger-ui/index.html`.
-
-Each API operation (`POST /api`, `GET /api/{ip}`) can be tried out.
-Note that redirects (`GET /api/{ip}`) produces a [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) error
-in the browser because Swagger UI does not perform requests in [`no-cors` mode](https://developer.mozilla.org/en-US/docs/Web/API/Request/mode).
+This can be tested by shutting down Redis. 
+The endpoint will return a `DOWN` status.

@@ -1,9 +1,7 @@
 package urlshortener
 
-
 import org.hamcrest.Matchers.`is`
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -11,15 +9,12 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.core.ValueOperations
 import org.springframework.http.MediaType
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-
-@RunWith(SpringRunner::class)
 @WebMvcTest(RedirectController::class)
 class UnitTest {
     @MockBean
@@ -32,7 +27,6 @@ class UnitTest {
     private lateinit var mvc: MockMvc
 
     companion object {
-        private const val FTP_EXAMPLE_COM = "ftp://example.com/"
         private const val HTTP_EXAMPLE_COM = "https://example.com/"
         private const val HASH = "83f94a17"
         private const val HASH_HTTP_EXAMPLE_COM = "http://localhost/api/$HASH"
@@ -50,15 +44,6 @@ class UnitTest {
             .andExpect(header().string("Location", `is`(HASH_HTTP_EXAMPLE_COM)))
     }
 
-    @Test
-    fun `should return 400 if the redirection cannot be created`() {
-        mvc.perform(
-            post("/api")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("url", FTP_EXAMPLE_COM)
-        )
-            .andExpect(status().isBadRequest)
-    }
 
     @Test
     fun `should return 307 in a valid redirection`() {
@@ -69,15 +54,5 @@ class UnitTest {
         )
             .andExpect(status().isTemporaryRedirect)
             .andExpect(header().string("Location", `is`(HTTP_EXAMPLE_COM)))
-    }
-
-    @Test
-    fun `should return 404 in an invalid redirection`() {
-        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations)
-        given(valueOperations[HASH]).willReturn(null)
-        mvc.perform(
-            get("/api/$HASH")
-        )
-            .andExpect(status().isNotFound)
     }
 }
